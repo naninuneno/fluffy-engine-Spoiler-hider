@@ -1,1 +1,2 @@
-# fluffy-engine-Spoiler-hider
+# Spoiler-hider
+Chrome extension to hide spoilers while browsing
