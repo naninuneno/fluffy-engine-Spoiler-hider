@@ -15,10 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var tvShow = document['tv-show-search']['tv-show'].value;
     var searchUrl = "http://api.tvmaze.com/singlesearch/shows?q=" + encodeURIComponent(tvShow) + "&embed=cast";
     
-    // CHROME
     var x = new XMLHttpRequest();
     x.open('GET', searchUrl);
-    // The Google image search API responds with JSON, so let Chrome parse it.
+    
     x.responseType = 'json';
     x.onload = function() {
       // Parse and process the response from Google Image Search.
@@ -32,15 +31,24 @@ document.addEventListener('DOMContentLoaded', function() {
         show.name = response.name;
         show.img = response.image.medium;
         show.cast = [];
-        response._embedded.cast.forEach(function(castMember) {
-          show.cast.push(castMember.character.name);
+        response._embedded.cast.forEach(function(responseCastMember) {
+          var castMember = {};
+          castMember.fullName = responseCastMember.character.name;
+          castMember.names = [];
+          responseCastMember.character.name.split(' ').forEach(function(name) {
+            var castMemberName = {};
+            castMemberName.text = name;
+            castMemberName.enabled = true;
+            castMember.names.push(castMemberName);
+          });
+          show.cast.push(castMember);
         });
         
         document.getElementById('result').innerHTML = show.name;
         document.getElementById('result-img').src = show.img;
         var castStr = "<ul>";
         show.cast.forEach(function(character) {
-          castStr += "<li><i>" + character + "</i></li>";
+          castStr += "<li><i>" + character.fullName + "</i></li>";
         });
         castStr += "</ul>";
         document.getElementById('cast').innerHTML = castStr; 
@@ -68,6 +76,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         if (!exists) {
+          // set spoilers enabled for new show
+          showToAdd.enabled = true;
           update(result.shows, showToAdd);
         }
       });
@@ -106,34 +116,126 @@ document.addEventListener('DOMContentLoaded', function() {
     // display container
     manageContainer.style.display = 'block';
 
-    // common checkbox class
-    var checkboxClass = "show-selection";
+    // display shows
+    chrome.storage.sync.get({shows: []}, function (result) {
+      result.shows.forEach(function(storedShow) {
 
-    // setup delete show functionality
-    var deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = 'Delete';
-    manageContainer.appendChild(deleteBtn);
-    deleteBtn.addEventListener('click', function(e) {
-      var showsToDelete = [];
-      var showCheckboxes = manageContainer.getElementsByClassName(checkboxClass);
+        // Whole show view
+        var showView = document.createElement('div');
+        showView.id = storedShow.name + "-container";
+        showView.className = "show-view";
+        
+        if (storedShow.enabled) {
+          showView.className += ' enabled-show';
+        } else {
+          showView.className += ' disabled-show';
+        }
+        
+        (function(_showName) {
+          showView.addEventListener('click', function(e) {
+            updateEnabledStatus(_showName);
+            if (showView.className.indexOf('enabled-show') != -1) {
+              showView.className = showView.className.replace('enabled-show', 'disabled-show');
+            } else {
+              showView.className = showView.className.replace('disabled-show', 'enabled-show');
+            }
+          });
+        })(storedShow.name);
+        
+        var showSummaryView = document.createElement('div');
+        showSummaryView.className = "show-summary";
 
-      for (i = 0; i < showCheckboxes.length; i++) {
-          var showCheckbox = showCheckboxes[i];
-          if (showCheckbox.checked) {
-            var showToRemove = {};
-            showToRemove.name = showCheckbox.id;
-            showToRemove.view = document.getElementById(showCheckbox.id + "-container");
+        // Show text
+        var showNameView = document.createElement('div');
+        showNameView.className = 'show-view-text';
+        var showNameSpan = document.createElement('span');
+        showNameSpan.className = 'show-view-text-span';
+        showNameSpan.appendChild(document.createTextNode(storedShow.name));
+        showNameView.appendChild(showNameSpan);
+        
+        // Buttons
+        var buttonsView = document.createElement('div');
+        buttonsView.className = 'show-view-buttons';
+        
+        // Expand info functionality
+        var expanded = false;
+        var expandIcon = document.createElement('i');
+        expandIcon.className = 'fa fa-plus expand-show-icon';
+        expandIcon.id = 'expand-' + storedShow.name;
+        (function(_show) {
+          expandIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
 
-            showsToDelete.push(showToRemove);
-          }
-      }
+            var sectionId = 'expanded-' + _show.name;
+            if (expanded) {
+              showView.removeChild(document.getElementById(sectionId));
+            } else {
+              var showNameToExpand = e.target.id.replace('expand-', '');
+              var expandSection = document.createElement('div');
+              expandSection.id = sectionId;
+              expandSection.className = 'show-expanded';
+              
+              _show.cast.forEach(function(character) {
+                var namesForCharacter = document.createElement('div');
+                namesForCharacter.className = 'character-names';
+                
+                character.names.forEach(function(name) {
+                  var nameText = document.createElement('span');
+                  nameText.appendChild(document.createTextNode(name.text));
+                  nameText.className = 'name-spoiler';
+                  if (name.enabled) {
+                    nameText.className += ' name-spoiler-enabled';
+                  } else {
+                    nameText.className += ' name-spoiler-disabled';
+                  }
+                  nameText.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    // TODO: persist this
+                    if (nameText.className.indexOf('name-spoiler-enabled') != -1) {
+                      nameText.className = nameText.className.replace('name-spoiler-enabled', 'name-spoiler-disabled');
+                    } else {
+                      nameText.className = nameText.className.replace('name-spoiler-disabled', 'name-spoiler-enabled');
+                    }
+                  });
+                  namesForCharacter.appendChild(nameText);
+                });
+                
+                var lineBreak = document.createElement('br');
+                expandSection.appendChild(namesForCharacter);
+                expandSection.appendChild(lineBreak);
+              });
+              
+              showView.appendChild(expandSection);
+            }
+            
+            expanded = !expanded;
+          });
+        })(storedShow);
+        
+        // Delete functionality
+        var deleteIcon = document.createElement('i');
+        deleteIcon.className = 'fa fa-close delete-show-icon';
+        deleteIcon.id = 'delete-' + storedShow.name;
+        deleteIcon.addEventListener('click', function(e) {
+          e.stopPropagation();
+          
+          var showNameToDelete = e.target.id.replace('delete-', '');
+          removeFromStorage(showNameToDelete);
+          // and update view to reflect this
+          var showViewToRemove = document.getElementById(showNameToDelete + "-container");
+          manageContainer.removeChild(showViewToRemove);
+        });
+        
+        buttonsView.appendChild(expandIcon);
+        buttonsView.appendChild(deleteIcon);
 
-      showsToDelete.forEach(function(showToDelete) {
-        // actually remove show from storage
-        removeFromStorage(showToDelete.name);
-        // and update view to reflect this
-        manageContainer.removeChild(showToDelete.view);
-      });
+        // building view for a whole show
+        showSummaryView.appendChild(showNameView);
+        showSummaryView.appendChild(buttonsView);
+        showView.appendChild(showSummaryView);
+        manageContainer.appendChild(showView);
+      });  
     });
     
     function removeFromStorage(showToRemove) {
@@ -141,50 +243,41 @@ document.addEventListener('DOMContentLoaded', function() {
       chrome.storage.sync.get({shows: []}, function (result) {
         remove(result.shows, showToRemove);
       });
-
-      function remove(array, showName) {
-        var index = -1;
-        for (i = 0; i < array.length; i++) {
-          var storedShow = array[i];
-          if (showName == storedShow.name) {
-            index = i;
-            break;
-          }
-        };
-        
-        // should never be the case but safety
-        if (index > -1) {
-          array.splice(index, 1);
-          chrome.storage.sync.set({shows: array}, function() {
-            console.log('Updated shows (after removal): ' + array);
-          });
-        }
+      function remove(storedShows, showToRemove) {
+        updateStorage(storedShows, showToRemove, function(index) {
+          storedShows.splice(index, 1);
+        });
       };
     };
-
-    // display shows
-    chrome.storage.sync.get({shows: []}, function (result) {
-      result.shows.forEach(function(storedShow) {
-
-        var showView = document.createElement('div');
-        showView.id = storedShow.name + "-container";
-
-        var checkbox = document.createElement('input');
-        checkbox.type = "checkbox";
-        checkbox.name = storedShow.name;
-        checkbox.id = storedShow.name;
-        checkbox.className = checkboxClass;
-
-        var label = document.createElement('label')
-        label.htmlFor = storedShow.name;
-        label.appendChild(document.createTextNode(storedShow.name));
-
-        showView.appendChild(checkbox);
-        showView.appendChild(label);
-        manageContainer.appendChild(showView);
+    
+    function updateEnabledStatus(showToUpdate) {
+      // default empty array
+      chrome.storage.sync.get({shows: []}, function (result) {
+        updateEnabled(result.shows, showToUpdate);
       });
+      function updateEnabled(storedShows, showToUpdate) {
+        updateStorage(storedShows, showToUpdate, function(index) {
+          storedShows[index].enabled = !storedShows[index].enabled;
+        });
+      };
+    };
+    
+    function updateStorage(storedShows, showToUpdate, fn) {
+      var index = -1;
+      for (i = 0; i < storedShows.length; i++) {
+        var storedShow = storedShows[i];
+        if (showToUpdate == storedShow.name) {
+          index = i;
+          break;
+        }
+      };
 
-      manageContainer.appendChild(deleteBtn);
-    });
+      if (index > -1) {
+        fn(index);
+        chrome.storage.sync.set({shows: storedShows}, function() {
+          console.log('Updated shows: ' + storedShows);
+        });
+      }
+    };
   }
 });
