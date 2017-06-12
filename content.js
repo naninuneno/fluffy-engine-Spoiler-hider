@@ -30,6 +30,9 @@ function blurSpoilers(storage) {
 
   // TODO: case-insensitive comparison
   // TODO: poor performance - alternative?
+  // TODO: slow to start - waits for page to load
+  // TODO: doesn't handle new content after page already loaded e.g. new reddit page in RES
+  // TODO: partial match - contains check probably e.g. "Jon" -> "Jon/..", "Jon's"
   for (i = 0; i < texts.length; i++) {
     // innerHTML rather than textContent so that links etc. are preserved
     var originalHtml = texts[i].innerHTML;
