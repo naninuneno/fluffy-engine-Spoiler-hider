@@ -9,7 +9,11 @@ function blurSpoilers(storage) {
   // TODO: make work for other elements
   var texts = document.getElementsByTagName('p');
   var potentialSpoilers = [];
-  storage.forEach(function(storedShow) {
+  for (i = 0; i < storage.length; i++) {
+    var storedShow = storage[i];
+    if (!storedShow.enabled) {
+      continue;
+    }
     storedShow.cast.forEach(function(character) {
       character.names.forEach(function(name) {
         // remove quotations from character nicknames
@@ -22,18 +26,19 @@ function blurSpoilers(storage) {
         }
       });
     });
-  });
+  }
 
   // TODO: case-insensitive comparison
+  // TODO: poor performance - alternative?
   for (i = 0; i < texts.length; i++) {
-    var originalText = texts[i].textContent;
+    // innerHTML rather than textContent so that links etc. are preserved
+    var originalHtml = texts[i].innerHTML;
     var isSpoiler = false;
     
     for (j = 0; j < potentialSpoilers.length; j++) {
       var spoiler = potentialSpoilers[j];
     
-      // TODO: poor performance - alternative?
-      var words = originalText.split(" ");
+      var words = texts[i].textContent.split(" ");
       
       for (k = 0; k < words.length; k++) {
         var word = words[k];
@@ -42,15 +47,15 @@ function blurSpoilers(storage) {
           texts[i].textContent = spoilerText;
           
           // closure for immediate execution
-          (function (_originalText) {
-            texts[i].addEventListener("mouseover", function(e) {
-              e.target.textContent = _originalText;
+          (function (_originalHtml) {
+            texts[i].addEventListener("mouseenter", function(e) {
+              e.target.innerHTML = _originalHtml;
             });
             
-            texts[i].addEventListener("mouseout", function(e) {
+            texts[i].addEventListener("mouseleave", function(e) {
               e.target.textContent = spoilerText;
             });
-          })(originalText);
+          })(originalHtml);
           
           isSpoiler = true;
           break;

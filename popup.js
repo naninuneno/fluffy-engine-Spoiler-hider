@@ -1,3 +1,7 @@
+var commonWords = [
+  "the","of","and","a","to","in","is","you","that","it","he","was","for","on","are","as","with","his","they","I","at","be","this","have","from","or","one","had","by","word","but","not","what","all","were","we","when","your","can","said","there","use","an","each","which","she","do","how","their","if","will","up","other","about","out","many","then","them","these","so","some","her","would","make","like","him","into","has","look","get","did","its","been","it's"
+];
+
 document.addEventListener('DOMContentLoaded', function() {
  
   var form = document.getElementById('tv-show-search');
@@ -39,6 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
             var castMemberName = {};
             castMemberName.text = name;
             castMemberName.enabled = true;
+            if (commonWords.indexOf(name) != -1) {
+              castMemberName.enabled = false;
+              castMemberName.common = true;
+            }
             castMember.names.push(castMemberName);
           });
           show.cast.push(castMember);
@@ -190,29 +198,34 @@ document.addEventListener('DOMContentLoaded', function() {
                   } else {
                     nameText.className += ' name-spoiler-disabled';
                   }
+                  if (name.common) {
+                    nameText.className += ' name-common';
+                  }
                   nameText.className += ' character-name-' + name.text;
                   
-                  (function(_showName, _characterName) {
-                    nameText.addEventListener('click', function(e) {
-                      e.stopPropagation();
-                      
-                      updateCharacterNameEnabledStatus(_showName, _characterName);
-                      
-                      // for updating _show
-                      name.enabled = !name.enabled;
+                  if (!name.common) {
+                    (function(_showName, _characterName) {
+                      nameText.addEventListener('click', function(e) {
+                        e.stopPropagation();
 
-                      var matchingNameElements = expandSection.getElementsByClassName('character-name-' + name.text);
-                      for (i = 0; i < matchingNameElements.length; i++) {
-                        var matchingNameElement = matchingNameElements[i];
-                        // name.enabled already updated - update element to reflect state
-                        if (name.enabled) {
-                          matchingNameElement.className = matchingNameElement.className.replace('name-spoiler-disabled', 'name-spoiler-enabled');
-                        } else {
-                          matchingNameElement.className = matchingNameElement.className.replace('name-spoiler-enabled', 'name-spoiler-disabled');
+                        updateCharacterNameEnabledStatus(_showName, _characterName);
+
+                        // for updating _show
+                        name.enabled = !name.enabled;
+
+                        var matchingNameElements = expandSection.getElementsByClassName('character-name-' + name.text);
+                        for (i = 0; i < matchingNameElements.length; i++) {
+                          var matchingNameElement = matchingNameElements[i];
+                          // name.enabled already updated - update element to reflect state
+                          if (name.enabled && !name.common) {
+                            matchingNameElement.className = matchingNameElement.className.replace('name-spoiler-disabled', 'name-spoiler-enabled');
+                          } else {
+                            matchingNameElement.className = matchingNameElement.className.replace('name-spoiler-enabled', 'name-spoiler-disabled');
+                          }
                         }
-                      }
-                    });
-                  })(_show.name, name.text);
+                      });
+                    })(_show.name, name.text);
+                  }
                   
                   namesForCharacter.appendChild(nameText);
                 });
