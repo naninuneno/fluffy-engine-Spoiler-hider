@@ -10,14 +10,16 @@ function blurSpoilers(storage) {
   var texts = document.getElementsByTagName('p');
   var potentialSpoilers = [];
   storage.forEach(function(storedShow) {
-    storedShow.cast.forEach(function(characterName) {
-      var names = characterName.split(" ");
-      names.forEach(function(name) {
+    storedShow.cast.forEach(function(character) {
+      character.names.forEach(function(name) {
         // remove quotations from character nicknames
-        if (name[0] = "'" && name[name.length -1] == "'") {
-          name = name.substring(1, name.length - 1);
+        // TODO: move to initial parsing along with name splitting
+        if (name.text[0] = "'" && name.text[name.text.length -1] == "'") {
+          name.text = name.text.substring(1, name.text.length - 1);
         }
-        potentialSpoilers.push(name);
+        if (name.enabled) {
+          potentialSpoilers.push(name.text);
+        }
       });
     });
   });

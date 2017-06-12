@@ -162,6 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var expandIcon = document.createElement('i');
         expandIcon.className = 'fa fa-plus expand-show-icon';
         expandIcon.id = 'expand-' + storedShow.name;
+        
+        _show = storedShow;
         (function(_show) {
           expandIcon.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -188,16 +190,30 @@ document.addEventListener('DOMContentLoaded', function() {
                   } else {
                     nameText.className += ' name-spoiler-disabled';
                   }
-                  nameText.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    
-                    // TODO: persist this
-                    if (nameText.className.indexOf('name-spoiler-enabled') != -1) {
-                      nameText.className = nameText.className.replace('name-spoiler-enabled', 'name-spoiler-disabled');
-                    } else {
-                      nameText.className = nameText.className.replace('name-spoiler-disabled', 'name-spoiler-enabled');
-                    }
-                  });
+                  nameText.className += ' character-name-' + name.text;
+                  
+                  (function(_showName, _characterName) {
+                    nameText.addEventListener('click', function(e) {
+                      e.stopPropagation();
+                      
+                      updateCharacterNameEnabledStatus(_showName, _characterName);
+                      
+                      // for updating _show
+                      name.enabled = !name.enabled;
+
+                      var matchingNameElements = expandSection.getElementsByClassName('character-name-' + name.text);
+                      for (i = 0; i < matchingNameElements.length; i++) {
+                        var matchingNameElement = matchingNameElements[i];
+                        // name.enabled already updated - update element to reflect state
+                        if (name.enabled) {
+                          matchingNameElement.className = matchingNameElement.className.replace('name-spoiler-disabled', 'name-spoiler-enabled');
+                        } else {
+                          matchingNameElement.className = matchingNameElement.className.replace('name-spoiler-enabled', 'name-spoiler-disabled');
+                        }
+                      }
+                    });
+                  })(_show.name, name.text);
+                  
                   namesForCharacter.appendChild(nameText);
                 });
                 
@@ -238,6 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });  
     });
     
+    // remove show from storage
     function removeFromStorage(showToRemove) {
       // default empty array
       chrome.storage.sync.get({shows: []}, function (result) {
@@ -250,6 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     };
     
+    // update status for show e.g. enabled -> disabled
     function updateEnabledStatus(showToUpdate) {
       // default empty array
       chrome.storage.sync.get({shows: []}, function (result) {
@@ -262,6 +280,32 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     };
     
+    // update status for character name e.g. enabled -> disabled
+    function updateCharacterNameEnabledStatus(showToUpdate, nameToUpdate) {
+      // default empty array
+      chrome.storage.sync.get({shows: []}, function (result) {
+        updateEnabled(result.shows, showToUpdate);
+      });
+      function updateEnabled(storedShows, showToUpdate) {
+        updateStorage(storedShows, showToUpdate, function(index) {
+          updateEnabledForName(storedShows[index], nameToUpdate);
+        });
+      };
+    }
+    
+    function updateEnabledForName(showToUpdate, nameToUpdate) {
+      // verbosity needed to update actual target object
+      for (i = 0; i < showToUpdate.cast.length; i++) {  
+        for (j = 0; j < showToUpdate.cast[i].names.length; j++) {
+          if (showToUpdate.cast[i].names[j].text == nameToUpdate) {
+            showToUpdate.cast[i].names[j].enabled = !showToUpdate.cast[i].names[j].enabled;
+            // don't break as multiple characters may share name
+          }
+        }
+      }
+    }
+    
+    // generic update storage method for shows, calling fn() on found show
     function updateStorage(storedShows, showToUpdate, fn) {
       var index = -1;
       for (i = 0; i < storedShows.length; i++) {
@@ -275,7 +319,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (index > -1) {
         fn(index);
         chrome.storage.sync.set({shows: storedShows}, function() {
-          console.log('Updated shows: ' + storedShows);
+          console.log('Updated shows:')
+          storedShows.forEach(function(storedShow) {
+            console.log(storedShow);
+          });
         });
       }
     };
