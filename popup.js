@@ -1,5 +1,5 @@
 var commonWords = [
-  "the","of","and","a","to","in","is","you","that","it","he","was","for","on","are","as","with","his","they","I","at","be","this","have","from","or","one","had","by","word","but","not","what","all","were","we","when","your","can","said","there","use","an","each","which","she","do","how","their","if","will","up","other","about","out","many","then","them","these","so","some","her","would","make","like","him","into","has","look","get","did","its","been","it's"
+  "the","of","and","a","to","in","is","you","that","it","he","was","for","on","are","as","with","his","they","I","at","be","this","have","from","or","one","had","by","word","but","not","what","all","were","we","when","your","can","said","there","use","an","each","which","she","do","how","their","if","will","up","other","about","out","many","then","them","these","so","some","her","would","make","like","him","into","has","look","get","did","its","been","it's","/"
 ];
 
 function SpoilerGroup(name) {
@@ -29,7 +29,8 @@ function Spoiler(text) {
     }
     spoilerFragment.text = textFragment;
     spoilerFragment.enabled = true;
-    if (commonWords.indexOf(textFragment) != -1) {
+    
+    if (commonWords.indexOf(textFragment.toLowerCase()) != -1) {
       spoilerFragment.enabled = false;
       spoilerFragment.common = true;
     }

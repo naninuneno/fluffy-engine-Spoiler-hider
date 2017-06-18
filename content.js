@@ -8,10 +8,6 @@ function blurSpoilers(storage) {
   var spoilerTextTemplate = "Potential spoilers for {0}! Mouse over to view original";
   var spoilerSetClass = "spoiler-set"
   
-  // TODO: make work for other elements
-  // find elements that haven't already had spoiler set
-  var texts = document.querySelectorAll('p:not(.' + spoilerSetClass + ')');
-  
   // for each group
   for (i = 0; i < storage.length; i++) {
     var potentialSpoilers = [];
@@ -19,6 +15,10 @@ function blurSpoilers(storage) {
     if (!storedGroup.enabled) {
       continue;
     }
+    
+    // TODO: make work for other elements
+    // find elements that haven't already had spoiler set
+    var texts = document.querySelectorAll('p:not(.' + spoilerSetClass + ')');
     
     // custom spoiler text for the group for some clarity
     var spoilerText = spoilerTextTemplate.format(storedGroup.name);
@@ -56,21 +56,21 @@ function blurSpoilers(storage) {
         for (l = 0; l < words.length; l++) {
 
           if (words[l] == spoiler) {
-            // TODO: something here about retaining element height? so it's not so jarring to switch between spoiler and hover-over mode
-            texts[j].textContent = spoilerText;
-            texts[j].className += ' ' + spoilerSetClass;
+            // closure for immediate execution to retain text and HTML of this iteration
+            (function(_spoilerText, _originalHtml) {
+              // TODO: something here about retaining element height? so it's not so jarring to switch between spoiler and hover-over mode
+              texts[j].textContent = _spoilerText;
+              texts[j].className += ' ' + spoilerSetClass;
 
-            // closure for immediate execution
-            (function (_originalHtml) {
               texts[j].addEventListener("mouseenter", function(e) {
                 e.target.innerHTML = _originalHtml;
               });
 
               texts[j].addEventListener("mouseleave", function(e) {
-                e.target.textContent = spoilerText;
+                e.target.textContent = _spoilerText;
               });
-            })(originalHtml);
-
+            })(spoilerText, originalHtml);
+            
             isSpoiler = true;
             break;
           }
