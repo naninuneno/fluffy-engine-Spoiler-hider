@@ -8,7 +8,7 @@ function execute(tabId) {
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.method == "storage") {
       var storedShows;
-      chrome.storage.sync.get({shows: []}, function (result) {
+      chrome.storage.local.get({shows: []}, function (result) {
         storedShows = result.shows;
         console.log(storedShows);
         sendResponse({storage: storedShows});

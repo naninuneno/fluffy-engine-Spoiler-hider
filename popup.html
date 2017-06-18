@@ -7,109 +7,38 @@
 <html>
   <head>
     <title>Getting Started Extension's Popup</title>
-    <style>
-      body {
-        font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
-        font-size: 100%;
-      }
-      #status {
-        /* avoid an excessively wide status text */
-        white-space: pre;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        max-width: 400px;
-      }
-      div#show-results {
-        display: none;
-      }
-      img#result-img {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      .show-view {
-        margin-top: 10px;
-        margin-bottom: 10px;
-        padding: 5px 10px 5px 10px;
-        border-radius: 5px;
-      }
-      .show-summary {
-        /* only has to work in chrome.. https://www.youtube.com/watch?v=5aopMm7UGYA */
-        display: flex;
-        align-items: center; /* align vertical */
-      }
-      .show-view-text {
-        display: inline-block;
-        width: 75%;
-      }
-      .show-view-buttons {
-        display: inline-block;
-        width: 25%;
-      }
-      .show-view.enabled-show {
-        background-color: mediumseagreen;
-        color: white;
-      }
-      .show-view.disabled-show {
-        background-color: darkgrey;
-        color: whitesmoke;
-        font-style: italic;
-      }
-      .delete-show-icon {
-        color: red;
-        margin-left: 10px;
-      }
-      .expand-show-icon {
-        color: white;
-        margin-left: 10px;
-      }
-      .show-expanded {
-        margin-top: 10px;
-      }
-      .show-expanded .name-spoiler {
-        margin-left: 5px;
-        margin-right: 5px;
-        padding-left: 5px;
-        padding-right: 5px;
-        border-radius: 5px;
-      }
-      .show-expanded .name-spoiler-enabled {
-        background-color: darkgreen;
-      }
-      .show-expanded .name-spoiler-disabled {
-        background-color: grey;
-      }
-      .show-expanded .name-common {
-        background-color: transparent !important;
-      }
-    </style>
 
     <script src="popup.js"></script>
+    <link rel="stylesheet" href="popup.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </head>
   <body>
-    <button id="manage">Stored Shows</button>
+    <button id="manage">Stored</button>
     <div id="manage-container">
+      <button id="add">Add..</button>
+      <br>
+      <div id="new-group-container"></div>
+      <div id="manage-group-container"></div>
     </div>
     
-    <form name="tv-show-search" id="tv-show-search">
-      <p>TV show:</p>
-      <input name="tv-show" type="text">
+    <form name="tv-group-search" id="tv-group-search">
+      <p>TV group:</p>
+      <input name="tv-group" type="text">
       <br>
       <input type="submit" value="Search">
-      <button id="save-show">Save</button>
+      <button id="save-group">Save</button>
     </form>
     
     <br>
     
-    <div id="show-results">
+    <div id="group-results">
       <h4>Show:</h4>
-      <div id="show-results-title">
+      <div id="group-results-title">
           <p id="result"></p>
           <img id="result-img" src="icon.png">
       </div>
       <h5>Characters:</h5>
-      <div id="cast"></div>
+      <div id="spoiler"></div>
     </div>
   </body>
 </html>

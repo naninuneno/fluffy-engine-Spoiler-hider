@@ -1,0 +1,119 @@
+body {
+  font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
+  font-size: 100%;
+}
+
+#status {
+  /* avoid an excessively wide status text */
+  white-space: pre;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 400px;
+}
+
+div#group-results {
+  display: none;
+}
+
+img#result-img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#manage-container {
+ display: none; 
+}
+
+#manage-container #add {
+  float: right;
+}
+
+.group-view, .group-view {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 5px 10px 5px 10px;
+  border-radius: 5px;
+}
+
+.group-summary {
+  /* only has to work in chrome.. https://www.youtube.com/watch?v=5aopMm7UGYA */
+  display: flex;
+  align-items: center; /* align vertical */
+}
+
+.group-view-text, #new-group-el {
+  display: inline-block;
+  width: 70%;
+}
+
+.group-view-buttons, #new-group-finish-el {
+  display: inline-block;
+  width: 30%;
+  text-align: right;
+}
+
+.group-view.enabled-group, .group-view.enabled-group {
+  background-color: mediumseagreen;
+  color: white;
+}
+
+.group-view.disabled-group, .group-view.disabled-group {
+  background-color: darkgrey;
+  color: whitesmoke;
+  font-style: italic;
+}
+
+#spoiler-group-name-new, .new-spoiler-input {
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: white;
+  border-bottom: 1px solid white;
+  box-sizing: border-box;
+  width: 100% 
+}
+
+.new-spoiler-input {
+  width: 80% !important;
+  margin-bottom: 15px;
+}
+
+#spoiler-group-finish, .new-spoiler-finish {
+  color: green;
+  margin-left: 10px;
+}
+
+.delete-group-icon {
+  color: red;
+  margin-left: 10px;
+}
+
+.expand-group-icon {
+  color: white;
+  margin-left: 10px;
+}
+
+.group-expanded {
+  margin-top: 10px;
+}
+
+.group-expanded .fragment-spoiler {
+  margin-left: 5px;
+  margin-right: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-radius: 5px;
+}
+
+.group-expanded .fragment-spoiler-enabled {
+  background-color: darkgreen;
+}
+
+.group-expanded .fragment-spoiler-disabled {
+  background-color: grey;
+}
+
+.group-expanded .fragment-common {
+  background-color: transparent !important;
+}

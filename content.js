@@ -12,27 +12,22 @@ function blurSpoilers(storage) {
   // find elements that haven't already had spoiler set
   var texts = document.querySelectorAll('p:not(.' + spoilerSetClass + ')');
   
-  // for each show
+  // for each group
   for (i = 0; i < storage.length; i++) {
     var potentialSpoilers = [];
-    var storedShow = storage[i];
-    if (!storedShow.enabled) {
+    var storedGroup = storage[i];
+    if (!storedGroup.enabled) {
       continue;
     }
     
-    // custom spoiler text for the show for some clarity
-    var spoilerText = spoilerTextTemplate.format(storedShow.name);
+    // custom spoiler text for the group for some clarity
+    var spoilerText = spoilerTextTemplate.format(storedGroup.name);
     
-    storedShow.cast.forEach(function(character) {
-      character.names.forEach(function(name) {
-        // remove quotations from character nicknames
-        // TODO: move to initial parsing along with name splitting
-        if (name.text[0] = "'" && name.text[name.text.length -1] == "'") {
-          name.text = name.text.substring(1, name.text.length - 1);
-        }
-        if (name.enabled) {
+    storedGroup.spoilers.forEach(function(spoiler) {
+      spoiler.spoilerFragments.forEach(function(fragment) {
+        if (fragment.enabled) {
           // for case-insensitive comparison
-          potentialSpoilers.push(name.text.toUpperCase());
+          potentialSpoilers.push(fragment.text.toUpperCase());
         }
       });
     });
@@ -51,7 +46,7 @@ function blurSpoilers(storage) {
       // remove common concatenations to the target (possessive, /(another name))
       elementText = elementText.replace(/'s|'S|\/[^ ]*/g, '');
 
-      // for each potential spoiler text word (e.g. each word of character name)
+      // for each potential spoiler text word (e.g. each word of spoiler name)
       for (k = 0; k < potentialSpoilers.length; k++) {
         var spoiler = potentialSpoilers[k];
 
