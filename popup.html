@@ -6,40 +6,52 @@
  -->
 <html>
   <head>
-    <title>Getting Started Extension's Popup</title>
+    <title>Spoilers!</title>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
     <script src="storage.js"></script>
     <script src="popup.js"></script>
     <link rel="stylesheet" href="popup.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </head>
   <body>
-    <button id="manage">Stored</button>
+    <div id="manage">
+      <span>Manage</span>
+      <i class="fa fa-caret-down"></i>
+    </div>
+    <br>
     <div id="manage-container">
       <button id="add">Add..</button>
       <br>
       <div id="new-group-container"></div>
       <div id="manage-group-container"></div>
     </div>
-    
-    <form name="tv-group-search" id="tv-group-search">
-      <p>TV group:</p>
-      <input name="tv-group" type="text">
-      <br>
-      <input type="submit" value="Search">
-      <button id="save-group">Save</button>
-    </form>
-    
+
+    <p><u>Find</u></p>
+    <div id="tv-group-search-expand">
+      <span>TV Shows</span>
+      <i class="fa fa-caret-down"></i>
+    </div>
     <br>
-    
-    <div id="group-results">
-      <h4>Show:</h4>
-      <div id="group-results-title">
-          <p id="result"></p>
-          <img id="result-img" src="icon.png">
+    <div id="tv-search-container">
+      <form name="tv-group-search" id="tv-group-search">
+        <p>TV group:</p>
+        <input name="tv-group" type="text">
+        <br>
+        <input type="submit" value="Search">
+        <button id="save-group">Save</button>
+      </form>
+
+      <br>
+
+      <p id="tv-search-failure">Couldn't find group</p>
+      <div id="tv-results">
+        <h4>Show:</h4>
+        <p id="tv-result-name"></p>
+        <img id="tv-result-img">
+        <h5>Characters:</h5>
+        <ul id="tv-characters-list"></ul>
       </div>
-      <h5>Characters:</h5>
-      <div id="spoiler"></div>
     </div>
   </body>
 </html>

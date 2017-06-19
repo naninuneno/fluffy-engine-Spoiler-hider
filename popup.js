@@ -42,19 +42,26 @@ function Spoiler(text) {
 
 document.addEventListener('DOMContentLoaded', function() {
  
-  var form = document.getElementById('tv-group-search');
-  var saveBtn = document.getElementById('save-group');
-  var manageBtn = document.getElementById('manage');
+  var manageExpand = document.getElementById('manage');
   var manageContainer = document.getElementById('manage-container');
   var addBtn = document.getElementById('add');
   var newGroupContainer = document.getElementById('new-group-container');
   var manageGroupContainer = document.getElementById('manage-group-container');
+  
   var groupCreationInProgress = false;
   var manageOpen = false;
+  
+  var tvSearchContainer = document.getElementById('tv-search-container');
+  var tvSearchForm = document.getElementById('tv-group-search');
+  var saveBtn = document.getElementById('save-group');
+  var tvSearchExpand = document.getElementById('tv-group-search-expand');
+  
+  var tvSearchOpen = false;
+  
   var spoilerGroup = {};
   
   // searching for show
-  form.addEventListener('submit', function(e) {
+  tvSearchForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
     hideManage();
@@ -69,11 +76,17 @@ document.addEventListener('DOMContentLoaded', function() {
     x.onload = function() {
       // Parse and process the response from Google Image Search.
       var response = x.response;
+      var searchFailureEl = document.getElementById('tv-search-failure');
+      var resultsEl = document.getElementById('tv-results');
+      
       if (!response || !response.name) {
-        document.getElementById('result').innerHTML = 'Couldn\'t find group';
+        searchFailureEl.style.display = 'block';
+        resultsEl.style.display = 'none';
         spoilerGroup = {};
+        
       } else {
-        document.getElementById('group-results').style.display = 'block';
+        searchFailureEl.style.display = 'none';
+        resultsEl.style.display = 'block';
         
         spoilerGroup = new SpoilerGroup(response.name);
         spoilerGroup.setImg(response.image.medium);
@@ -83,14 +96,16 @@ document.addEventListener('DOMContentLoaded', function() {
           );
         });
         
-        document.getElementById('result').innerHTML = spoilerGroup.name;
-        document.getElementById('result-img').src = spoilerGroup.img;
-        var spoilerStr = "<ul>";
+        document.getElementById('tv-result-name').textContent = spoilerGroup.name;
+        document.getElementById('tv-result-img').src = spoilerGroup.img;
+        var spoilerListEl = document.getElementById('tv-characters-list');
         spoilerGroup.spoilers.forEach(function(spoiler) {
-          spoilerStr += "<li><i>" + spoiler.fullText + "</i></li>";
+          var listEl = document.createElement('li');
+          var italicsEl = document.createElement('i');
+          italicsEl.textContent = spoiler.fullText;
+          listEl.appendChild(italicsEl);
+          spoilerListEl.appendChild(listEl);
         });
-        spoilerStr += "</ul>";
-        document.getElementById('spoiler').innerHTML = spoilerStr;
       }
     };
     x.send();
@@ -109,12 +124,25 @@ document.addEventListener('DOMContentLoaded', function() {
     saveNewGroup(spoilerGroup);
   });
   
-  manageBtn.addEventListener('click', function(e) {
+  manageExpand.addEventListener('click', function(e) {
     if (manageOpen) {
       hideManage();
     } else {
       displayManage();
     }
+  });
+  
+  tvSearchContainer.classList.add('collapsed');
+  
+  tvSearchExpand.addEventListener('click', function(e) {
+    tvSearchContainer.classList.toggle('collapsed');
+    /* if (tvSearchOpen) {
+      tvSearchOpen = false;
+      tvSearchContainer.style.display = 'none';
+    } else {
+      tvSearchOpen = true;
+      tvSearchContainer.style.display = 'block';
+    } */
   });
   
   addBtn.addEventListener('click', function(e) {
