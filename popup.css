@@ -48,11 +48,24 @@ body {
   float: right;
 }
 
-.group-view, .group-view {
+.group-view {
   margin-top: 10px;
   margin-bottom: 10px;
   padding: 5px 10px 5px 10px;
   border-radius: 5px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .125);
+}
+
+.group-view.enabled-group {
+  background-color: #2ECC71;
+  color: white;
+}
+
+.group-view.disabled-group {
+  background-color: darkgrey;
+  color: whitesmoke;
+  font-style: italic;
 }
 
 .group-summary {
@@ -72,15 +85,22 @@ body {
   text-align: right;
 }
 
-.group-view.enabled-group, .group-view.enabled-group {
-  background-color: mediumseagreen;
+.expand-group-icon {
   color: white;
+  margin-left: 10px;
 }
 
-.group-view.disabled-group, .group-view.disabled-group {
-  background-color: darkgrey;
-  color: whitesmoke;
-  font-style: italic;
+.delete-group-icon {
+  color: orangered;
+  margin-left: 10px;
+}
+
+.group-view-buttons .expand-group-icon:hover {
+  color: lightgrey;
+}
+
+.group-view-buttons .delete-group-icon:hover {
+  color: crimson;
 }
 
 #spoiler-group-name-new, .new-spoiler-input {
@@ -103,16 +123,6 @@ body {
   margin-left: 10px;
 }
 
-.delete-group-icon {
-  color: red;
-  margin-left: 10px;
-}
-
-.expand-group-icon {
-  color: white;
-  margin-left: 10px;
-}
-
 .group-expanded {
   margin-top: 10px;
 }
@@ -131,6 +141,7 @@ body {
 
 .group-expanded .fragment-spoiler-disabled {
   background-color: grey;
+  font-style: italic;
 }
 
 .group-expanded .fragment-common {

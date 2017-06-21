@@ -1,45 +1,3 @@
-var commonWords = [
-  "the","of","and","a","to","in","is","you","that","it","he","was","for","on","are","as","with","his","they","I","at","be","this","have","from","or","one","had","by","word","but","not","what","all","were","we","when","your","can","said","there","use","an","each","which","she","do","how","their","if","will","up","other","about","out","many","then","them","these","so","some","her","would","make","like","him","into","has","look","get","did","its","been","it's","/"
-];
-
-function SpoilerGroup(name) {
-  this.name = name;
-  this.spoilers = [];
-  
-  SpoilerGroup.prototype.setImg = function(img) {
-    this.img = img;
-  }
-  
-  SpoilerGroup.prototype.addSpoiler = function(spoiler) {
-    this.spoilers.push(spoiler);
-  }
-}
-
-function Spoiler(text) {
-  this.fullText = text;
-  var spoilerFragments = [];
-  
-  this.fullText.split(' ').forEach(function(textFragment) {
-    var spoilerFragment = {};
-    // strip quotations from start/end
-    var firstChar = textFragment[0];
-    var lastChar = textFragment[textFragment.length -1];
-    if ((firstChar = "'" && lastChar == "'") || (firstChar = '"' && lastChar == '"')) {
-      textFragment = textFragment.substring(1, textFragment.length - 1);
-    }
-    spoilerFragment.text = textFragment;
-    spoilerFragment.enabled = true;
-    
-    if (commonWords.indexOf(textFragment.toLowerCase()) != -1) {
-      spoilerFragment.enabled = false;
-      spoilerFragment.common = true;
-    }
-    spoilerFragments.push(spoilerFragment);
-  });
-  
-  this.spoilerFragments = spoilerFragments;
-}
-
 document.addEventListener('DOMContentLoaded', function() {
  
   var manageExpand = document.getElementById('manage');
@@ -49,7 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
   var manageGroupContainer = document.getElementById('manage-group-container');
   
   var groupCreationInProgress = false;
+  var newSpoilerInCreation = false;
   var manageOpen = false;
+  var tvSearchOpen = false;
   
   var tvSaveSuccessEl = document.getElementById('tv-save-success');
   var tvSaveFailureEl = document.getElementById('tv-save-failure');
@@ -59,98 +19,67 @@ document.addEventListener('DOMContentLoaded', function() {
   var tvSearchExpand = document.getElementById('tv-group-search-expand');
   var tvResultsEl = document.getElementById('tv-results');
   
-  var tvSearchOpen = false;
+  manageContainer.classList.add('collapsed');
+  tvSearchContainer.classList.add('collapsed');
   
   var spoilerGroup = {};
   
-  // searching for show
-  tvSearchForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    var characterList = document.getElementById('tv-characters-list');
-    while (characterList.hasChildNodes()) {
-      characterList.removeChild(characterList.lastChild);
-    }
-    
-    hideManage();
-    tvSaveFailureEl.style.display = 'none';
-    
-    var tvGroup = document['tv-group-search']['tv-group'].value;
-    var searchUrl = "http://api.tvmaze.com/singlesearch/shows?q=" + encodeURIComponent(tvGroup) + "&embed=cast";
-    
-    var x = new XMLHttpRequest();
-    x.open('GET', searchUrl);
-    
-    x.responseType = 'json';
-    x.onload = function() {
-      // Parse and process the response from Google Image Search.
-      var response = x.response;
-      var tvSearchFailureEl = document.getElementById('tv-search-failure');
+  addBtn.addEventListener('click', function(e) {
+    if (!groupCreationInProgress) {
+      groupCreationInProgress = true;
       
-      if (!response || !response.name) {
-        saveBtn.disabled = true;
-        tvSearchFailureEl.style.display = 'block';
-        tvResultsEl.style.display = 'none';
-        spoilerGroup = {};
-        
-      } else {
-        saveBtn.removeAttribute('disabled');
-        tvSearchFailureEl.style.display = 'none';
-        tvResultsEl.style.display = 'block';
-        
-        spoilerGroup = new SpoilerGroup(response.name);
-        spoilerGroup.setImg(response.image.medium);
-        response._embedded.cast.forEach(function(responseCastMember) {
-          spoilerGroup.addSpoiler(
-            new Spoiler(responseCastMember.character.name)
-          );
-        });
-        
-        document.getElementById('tv-result-name').textContent = spoilerGroup.name;
-        document.getElementById('tv-result-img').src = spoilerGroup.img;
-        var spoilerListEl = document.getElementById('tv-characters-list');
-        spoilerGroup.spoilers.forEach(function(spoiler) {
-          var listEl = document.createElement('li');
-          var italicsEl = document.createElement('i');
-          italicsEl.textContent = spoiler.fullText;
-          listEl.appendChild(italicsEl);
-          spoilerListEl.appendChild(listEl);
-        });
+      var newSpoilerGroup = createNewSpoilerGroupView();
+      newGroupContainer.appendChild(newSpoilerGroup);
+      // focus on new input field to enter name
+      document.getElementById('spoiler-group-name-new').focus();
+    }
+  });
+  
+  function createNewSpoilerGroupView() {
+    var groupElement = document.createElement('div');
+    // TODO: id - should include name
+    groupElement.className = "group-view";
+    groupElement.className += ' enabled-group';
+    
+    var nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.id = "spoiler-group-name-new";
+    
+    var newGroupNameEl = document.createElement('div');
+    newGroupNameEl.id = 'new-group-el';
+    newGroupNameEl.appendChild(nameInput);
+    
+    var finishBtn = document.createElement('button');
+    finishBtn.id = 'spoiler-group-finish';
+    finishBtn.type = 'button';
+    finishBtn.className = 'btn btn-success';
+    var finishIcon = document.createElement('i');
+    finishIcon.className = 'fa fa-check';
+    finishBtn.appendChild(finishIcon);
+    
+    // TODO: don't close if already exists - some visual validation
+    finishBtn.addEventListener('click', function(e) {
+      var newGroupName = nameInput.value;
+      if (!newGroupName) {
+        return;
       }
-    };
-    x.send();
-  });
-  
-  function saveNewGroup(spoilerGroup) {
-    hideManage();
-    if (!(Object.keys(spoilerGroup).length === 0 &&   spoilerGroup.constructor === Object)) {
-      STORAGE.addToStorage(spoilerGroup);
-      return true;
-    }
-    return false;
+      
+      var newSpoilerGroup = new SpoilerGroup(nameInput.value);
+      saveNewGroup(newSpoilerGroup);
+      
+      newGroupContainer.removeChild(groupElement);
+      groupCreationInProgress = false;
+    });
+    
+    var newGroupFinishEl = document.createElement('div');
+    newGroupFinishEl.id = 'new-group-finish-el';
+    newGroupFinishEl.appendChild(finishBtn);
+    
+    groupElement.appendChild(newGroupNameEl);
+    groupElement.appendChild(newGroupFinishEl);
+    
+    return groupElement;
   }
-  
-  saveBtn.addEventListener('click', function(e) {
-    if (saveNewGroup(spoilerGroup)) {
-      // hide results that have been saved
-      tvResultsEl.style.display = 'none';
-      tvSaveFailureEl.style.display = 'none';
-      // briefly display success message
-      tvSaveSuccessEl.style.display = 'block';
-      setTimeout(function() {
-        tvSaveSuccessEl.style.display = 'none';
-      }, 5000);
-    } else {
-      tvSaveFailureEl.style.display = 'block';
-      setTimeout(function() {
-        tvSaveFailureEl.style.display = 'none';
-      }, 5000);
-    }
-    saveBtn.disabled = true;
-  });
-  
-  manageContainer.classList.add('collapsed');
-  tvSearchContainer.classList.add('collapsed');
   
   manageExpand.addEventListener('click', function(e) {
     if (manageOpen) {
@@ -165,23 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
   tvSearchExpand.addEventListener('click', function(e) {
     tvSearchContainer.classList.toggle('collapsed');
     toggleCaretState('tv-expand-caret-icon');
-  });
-  
-  function toggleCaretState(elementId) {
-    var caretIcon = document.getElementById(elementId);
-    caretIcon.classList.toggle('fa-caret-down');
-    caretIcon.classList.toggle('fa-caret-up');
-  }
-  
-  addBtn.addEventListener('click', function(e) {
-    if (!groupCreationInProgress) {
-      groupCreationInProgress = true;
-      
-      var newSpoilerGroup = createNewSpoilerGroupView();
-      newGroupContainer.appendChild(newSpoilerGroup);
-      // focus on new input field to enter name
-      document.getElementById('spoiler-group-name-new').focus();
-    }
   });
   
   function hideManage() {
@@ -242,52 +154,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  function createNewSpoilerGroupView() {
-    var groupElement = document.createElement('div');
-    // TODO: id - should include name
-    groupElement.className = "group-view";
-    groupElement.className += ' enabled-group';
-    
-    var nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.id = "spoiler-group-name-new";
-    
-    var newGroupNameEl = document.createElement('div');
-    newGroupNameEl.id = 'new-group-el';
-    newGroupNameEl.appendChild(nameInput);
-    
-    var finishBtn = document.createElement('button');
-    finishBtn.id = 'spoiler-group-finish';
-    finishBtn.type = 'button';
-    finishBtn.className = 'btn btn-success';
-    var finishIcon = document.createElement('i');
-    finishIcon.className = 'fa fa-check';
-    finishBtn.appendChild(finishIcon);
-    
-    // TODO: don't close if already exists - some visual validation
-    finishBtn.addEventListener('click', function(e) {
-      var newGroupName = nameInput.value;
-      if (!newGroupName) {
-        return;
-      }
-      
-      var newSpoilerGroup = new SpoilerGroup(nameInput.value);
-      saveNewGroup(newSpoilerGroup);
-      
-      newGroupContainer.removeChild(groupElement);
-      groupCreationInProgress = false;
-    });
-    
-    var newGroupFinishEl = document.createElement('div');
-    newGroupFinishEl.id = 'new-group-finish-el';
-    newGroupFinishEl.appendChild(finishBtn);
-    
-    groupElement.appendChild(newGroupNameEl);
-    groupElement.appendChild(newGroupFinishEl);
-    
-    return groupElement;
-  }
-  
   function createGroupView(storedGroup) {
     var groupView = document.createElement('div');
     groupView.id = storedGroup.name + "-container";
@@ -319,7 +185,6 @@ document.addEventListener('DOMContentLoaded', function() {
     expandIcon.id = 'expand-' + storedGroup.name;
     
     var expanded = false;
-    var newSpoilerInCreation = false;
 
     (function(_group) {
       expandIcon.addEventListener('click', function(e) {
@@ -327,81 +192,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var sectionId = 'expanded-' + _group.name;
         if (expanded) {
-          // change icon to show it's closed now
-          expandIcon.className = expandIcon.className.replace('fa-caret-up', 'fa-caret-down');
-          
-          groupView.removeChild(document.getElementById(sectionId));
+          closeExpandView(expandIcon, groupView, sectionId);
         } else {
-          // change icon to show it's expanded now
-          expandIcon.className = expandIcon.className.replace('fa-caret-down', 'fa-caret-up');
-          
-          var groupNameToExpand = e.target.id.replace('expand-', '');
-          var expandSection = document.createElement('div');
-          expandSection.id = sectionId;
-          expandSection.className = 'group-expanded';
-          
-          // adding new spoiler
-          var newSpoilerIcon = document.createElement('i');
-          newSpoilerIcon.className = 'fa fa-plus new-spoiler';
-          newSpoilerIcon.addEventListener('click', function(e) {
-            e.stopPropagation();
-            
-            if (newSpoilerInCreation) {
-              return;
-            }
-            
-            newSpoilerInCreation = true;
-            
-            var spoilerNameInput = document.createElement("input");
-            spoilerNameInput.type = "text";
-            spoilerNameInput.className = 'new-spoiler-input';
-            spoilerNameInput.addEventListener('click', function(e) {
-              e.stopPropagation();
-            });
-            
-            var spoilerFinishIcon = document.createElement('i');
-            spoilerFinishIcon.className = 'fa fa-check new-spoiler-finish';
-            
-            var firstStoredSpoiler = document.getElementsByClassName('fragment-names')[0];
-            
-            if (firstStoredSpoiler) {
-              expandSection.insertBefore(spoilerNameInput, firstStoredSpoiler);
-              expandSection.insertBefore(spoilerFinishIcon, firstStoredSpoiler);
-            } else {
-              expandSection.appendChild(spoilerNameInput);
-              expandSection.appendChild(spoilerFinishIcon);
-            }
-            
-            // focus on new input field to enter name
-            spoilerNameInput.focus();
-            
-            spoilerFinishIcon.addEventListener('click', function(e) {
-              e.stopPropagation();
-              
-              // for storage
-              STORAGE.addSpoilerToStorage(_group.name, spoilerNameInput.value);
-              // for UI update
-              _group.spoilers.push(new Spoiler(spoilerNameInput.value));
-              
-              expandSection.removeChild(spoilerNameInput);
-              expandSection.removeChild(spoilerFinishIcon);
-              newSpoilerInCreation = false;
-            })
-          });
-          
-          expandSection.appendChild(newSpoilerIcon);
-          expandSection.appendChild(document.createElement('br'));
-          expandSection.appendChild(document.createElement('br'));
-
-          // add elements for existing stored spoilers
-          _group.spoilers.forEach(function(spoiler) {
-            var spoilerFragments = createSpoilerFragmentsElement(expandSection, _group, spoiler);
-
-            expandSection.appendChild(spoilerFragments);
-            expandSection.appendChild(document.createElement('br'));
-          });
-
-          groupView.appendChild(expandSection);
+          openExpandView(_group, expandIcon, groupView, sectionId);
         }
 
         expanded = !expanded;
@@ -409,7 +202,90 @@ document.addEventListener('DOMContentLoaded', function() {
     })(storedGroup);
     
     return expandIcon;
-  };
+  }
+  
+  function closeExpandView(expandIcon, groupView, sectionId) {
+    // change icon to show it's closed now
+    expandIcon.className = expandIcon.className.replace('fa-caret-up', 'fa-caret-down');
+
+    groupView.removeChild(document.getElementById(sectionId));
+  }
+  
+  function openExpandView(_group, expandIcon, groupView, sectionId) {
+    // change icon to show it's expanded now
+    expandIcon.className = expandIcon.className.replace('fa-caret-down', 'fa-caret-up');
+
+    var expandSection = document.createElement('div');
+    expandSection.id = sectionId;
+    expandSection.className = 'group-expanded';
+
+    // adding new spoiler
+    var newSpoilerIcon = document.createElement('i');
+    newSpoilerIcon.className = 'fa fa-plus new-spoiler';
+    newSpoilerIcon.addEventListener('click', function(e) {
+      e.stopPropagation();
+      
+      createNewSpoiler(_group, expandSection);
+    });
+
+    expandSection.appendChild(newSpoilerIcon);
+    expandSection.appendChild(document.createElement('br'));
+    expandSection.appendChild(document.createElement('br'));
+
+    // add elements for existing stored spoilers
+    _group.spoilers.forEach(function(spoiler) {
+      var spoilerFragments = createSpoilerFragmentsElement(expandSection, _group, spoiler);
+
+      expandSection.appendChild(spoilerFragments);
+      expandSection.appendChild(document.createElement('br'));
+    });
+
+    groupView.appendChild(expandSection);
+  }
+  
+  function createNewSpoiler(_group, expandSection) {
+    if (newSpoilerInCreation) {
+      return;
+    }
+
+    newSpoilerInCreation = true;
+
+    var spoilerNameInput = document.createElement("input");
+    spoilerNameInput.type = "text";
+    spoilerNameInput.className = 'new-spoiler-input';
+    spoilerNameInput.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+
+    var spoilerFinishIcon = document.createElement('i');
+    spoilerFinishIcon.className = 'fa fa-check new-spoiler-finish';
+
+    var firstStoredSpoiler = document.getElementsByClassName('fragment-names')[0];
+
+    if (firstStoredSpoiler) {
+      expandSection.insertBefore(spoilerNameInput, firstStoredSpoiler);
+      expandSection.insertBefore(spoilerFinishIcon, firstStoredSpoiler);
+    } else {
+      expandSection.appendChild(spoilerNameInput);
+      expandSection.appendChild(spoilerFinishIcon);
+    }
+
+    // focus on new input field to enter name
+    spoilerNameInput.focus();
+
+    spoilerFinishIcon.addEventListener('click', function(e) {
+      e.stopPropagation();
+
+      // for storage
+      STORAGE.addSpoilerToStorage(_group.name, spoilerNameInput.value);
+      // for UI update
+      _group.spoilers.push(new Spoiler(spoilerNameInput.value));
+
+      expandSection.removeChild(spoilerNameInput);
+      expandSection.removeChild(spoilerFinishIcon);
+      newSpoilerInCreation = false;
+    });
+  }
   
   function createSpoilerFragmentsElement(parentElement, group, spoiler) {
     var spoilerFragments = document.createElement('div');
@@ -474,5 +350,125 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     return deleteIcon;
-  };
+  }
+  
+  
+  //////////////////////////
+  // SEARCH FUNCTIONALITY //
+  //////////////////////////
+
+  
+  // searching for show
+  tvSearchForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    removeTvCharactersFromCharacterListElement();
+    
+    hideManage();
+    tvSaveFailureEl.style.display = 'none';
+    
+    var tvGroup = document['tv-group-search']['tv-group'].value;
+    var searchUrl = "http://api.tvmaze.com/singlesearch/shows?q=" + encodeURIComponent(tvGroup) + "&embed=cast";
+    
+    sendRequest(searchUrl);
+  });
+  
+  function removeTvCharactersFromCharacterListElement() {
+    var characterList = document.getElementById('tv-characters-list');
+    while (characterList.hasChildNodes()) {
+      characterList.removeChild(characterList.lastChild);
+    }
+  }
+  
+  function sendRequest(searchUrl) {
+    var request = new XMLHttpRequest();
+    request.open('GET', searchUrl);
+    
+    request.responseType = 'json';
+    request.onload = function() {
+      // Parse and process the response from Google Image Search.
+      var response = request.response;
+      var tvSearchFailureEl = document.getElementById('tv-search-failure');
+      
+      if (!response || !response.name) {
+        saveBtn.disabled = true;
+        tvSearchFailureEl.style.display = 'block';
+        tvResultsEl.style.display = 'none';
+        spoilerGroup = {};
+        
+      } else {
+        saveBtn.removeAttribute('disabled');
+        tvSearchFailureEl.style.display = 'none';
+        tvResultsEl.style.display = 'block';
+        
+        spoilerGroup = new SpoilerGroup(response.name);
+        spoilerGroup.setImg(response.image.medium);
+        response._embedded.cast.forEach(function(responseCastMember) {
+          spoilerGroup.addSpoiler(
+            new Spoiler(responseCastMember.character.name)
+          );
+        });
+        
+        document.getElementById('tv-result-name').textContent = spoilerGroup.name;
+        document.getElementById('tv-result-img').src = spoilerGroup.img;
+        var spoilerListEl = document.getElementById('tv-characters-list');
+        spoilerGroup.spoilers.forEach(function(spoiler) {
+          var listEl = document.createElement('li');
+          var italicsEl = document.createElement('i');
+          italicsEl.textContent = spoiler.fullText;
+          listEl.appendChild(italicsEl);
+          spoilerListEl.appendChild(listEl);
+        });
+      }
+    };
+    request.send();
+  }
+  
+  saveBtn.addEventListener('click', function(e) {
+    if (saveNewGroup(spoilerGroup)) {
+      showGroupSaved();
+    } else {
+      showFailureToSaveGroup();
+    }
+    saveBtn.disabled = true;
+  });
+  
+  function saveNewGroup(spoilerGroup) {
+    hideManage();
+    if (!(Object.keys(spoilerGroup).length === 0 &&   spoilerGroup.constructor === Object)) {
+      STORAGE.addToStorage(spoilerGroup);
+      return true;
+    }
+    return false;
+  }
+  
+  function showGroupSaved() {
+    // hide results that have been saved
+    tvResultsEl.style.display = 'none';
+    tvSaveFailureEl.style.display = 'none';
+    // briefly display success message
+    tvSaveSuccessEl.style.display = 'block';
+    setTimeout(function() {
+      tvSaveSuccessEl.style.display = 'none';
+    }, 5000);
+  }
+  
+  function showFailureToSaveGroup() {
+    tvSaveFailureEl.style.display = 'block';
+    setTimeout(function() {
+      tvSaveFailureEl.style.display = 'none';
+    }, 5000);
+  }
+  
+  
+  /////////////
+  // GENERIC //
+  /////////////
+  
+  
+  function toggleCaretState(elementId) {
+    var caretIcon = document.getElementById(elementId);
+    caretIcon.classList.toggle('fa-caret-down');
+    caretIcon.classList.toggle('fa-caret-up');
+  }
 });

@@ -36,10 +36,13 @@ function blurSpoilers(storage) {
     // TODO: poor performance - alternative?
     // TODO: slow to start - waits for page to load
     // TODO: doesn't handle new content after page already loaded e.g. new reddit page in RES
+    
     // for each text on page
     for (j = 0; j < texts.length; j++) {
       // innerHTML rather than textContent so that links etc. are preserved
       var originalHtml = texts[j].innerHTML;
+      var originalHeight = texts[j].clientHeight + "px";
+      
       var isSpoiler = false;
       // for case-insensitive comparison
       var elementText = texts[j].textContent.toUpperCase();
@@ -58,9 +61,11 @@ function blurSpoilers(storage) {
           if (words[l] == spoiler) {
             // closure for immediate execution to retain text and HTML of this iteration
             (function(_spoilerText, _originalHtml) {
-              // TODO: something here about retaining element height? so it's not so jarring to switch between spoiler and hover-over mode
+              
               texts[j].textContent = _spoilerText;
               texts[j].className += ' ' + spoilerSetClass;
+              
+              texts[j].style.height = originalHeight;
 
               texts[j].addEventListener("mouseenter", function(e) {
                 e.target.innerHTML = _originalHtml;
