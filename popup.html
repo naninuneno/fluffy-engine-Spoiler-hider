@@ -8,6 +8,7 @@
   <head>
     <title>Spoilers!</title>
 
+    <link rel="stylesheet" href="bootstrap-stripped.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     
     <script src="storage.js"></script>
@@ -15,41 +16,44 @@
     <link rel="stylesheet" href="popup.css">
   </head>
   <body>
-    <div id="manage">
-      <span>Manage</span>
-      <i class="fa fa-caret-down"></i>
-    </div>
+    <button id="manage" type="button" class="btn btn-primary">Manage <i id="manage-expand-caret-icon" class="fa fa-caret-down"></i>
+    </button>
+    <br>
     <br>
     <div id="manage-container">
-      <button id="add">Add..</button>
+      <button id="add" type="button" class="btn btn-info">Add&#8230;</button>
+      <br>
       <br>
       <div id="new-group-container"></div>
       <div id="manage-group-container"></div>
     </div>
 
-    <p><u>Find</u></p>
-    <div id="tv-group-search-expand">
-      <span>TV Shows</span>
-      <i class="fa fa-caret-down"></i>
-    </div>
+    <hr>
+    
+    <p>Find:</p>
+    <button id="tv-group-search-expand" type="button" class="btn btn-primary">TV Shows <i id="tv-expand-caret-icon" class="fa fa-caret-down"></i>
+    </button>
     <br>
     <div id="tv-search-container">
       <form name="tv-group-search" id="tv-group-search">
-        <p>TV group:</p>
-        <input name="tv-group" type="text">
         <br>
-        <input type="submit" value="Search">
-        <button id="save-group">Save</button>
+        <span>Search:</span>
+        &nbsp;
+        <input name="tv-group" type="text">
+        &nbsp;
+        <!-- default disabled, enabled on search -->
+        <button id="save-group" type="button" class="btn btn-success btn-sm" disabled>Save</button>
       </form>
 
       <br>
 
       <p id="tv-search-failure">Couldn't find group</p>
+      <p id="tv-save-success">TV Show saved!</p>
+      <p id="tv-save-failure">Couldn't save show - perhaps it's already saved</p>
       <div id="tv-results">
-        <h4>Show:</h4>
-        <p id="tv-result-name"></p>
+        <h3 id="tv-result-name"></h3>
         <img id="tv-result-img">
-        <h5>Characters:</h5>
+        <h4>Characters:</h4>
         <ul id="tv-characters-list"></ul>
       </div>
     </div>

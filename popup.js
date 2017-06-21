@@ -51,10 +51,13 @@ document.addEventListener('DOMContentLoaded', function() {
   var groupCreationInProgress = false;
   var manageOpen = false;
   
+  var tvSaveSuccessEl = document.getElementById('tv-save-success');
+  var tvSaveFailureEl = document.getElementById('tv-save-failure');
   var tvSearchContainer = document.getElementById('tv-search-container');
   var tvSearchForm = document.getElementById('tv-group-search');
   var saveBtn = document.getElementById('save-group');
   var tvSearchExpand = document.getElementById('tv-group-search-expand');
+  var tvResultsEl = document.getElementById('tv-results');
   
   var tvSearchOpen = false;
   
@@ -64,7 +67,13 @@ document.addEventListener('DOMContentLoaded', function() {
   tvSearchForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
+    var characterList = document.getElementById('tv-characters-list');
+    while (characterList.hasChildNodes()) {
+      characterList.removeChild(characterList.lastChild);
+    }
+    
     hideManage();
+    tvSaveFailureEl.style.display = 'none';
     
     var tvGroup = document['tv-group-search']['tv-group'].value;
     var searchUrl = "http://api.tvmaze.com/singlesearch/shows?q=" + encodeURIComponent(tvGroup) + "&embed=cast";
@@ -76,17 +85,18 @@ document.addEventListener('DOMContentLoaded', function() {
     x.onload = function() {
       // Parse and process the response from Google Image Search.
       var response = x.response;
-      var searchFailureEl = document.getElementById('tv-search-failure');
-      var resultsEl = document.getElementById('tv-results');
+      var tvSearchFailureEl = document.getElementById('tv-search-failure');
       
       if (!response || !response.name) {
-        searchFailureEl.style.display = 'block';
-        resultsEl.style.display = 'none';
+        saveBtn.disabled = true;
+        tvSearchFailureEl.style.display = 'block';
+        tvResultsEl.style.display = 'none';
         spoilerGroup = {};
         
       } else {
-        searchFailureEl.style.display = 'none';
-        resultsEl.style.display = 'block';
+        saveBtn.removeAttribute('disabled');
+        tvSearchFailureEl.style.display = 'none';
+        tvResultsEl.style.display = 'block';
         
         spoilerGroup = new SpoilerGroup(response.name);
         spoilerGroup.setImg(response.image.medium);
@@ -113,16 +123,34 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function saveNewGroup(spoilerGroup) {
     hideManage();
-
-    // empty group check
-    if (!(Object.keys(spoilerGroup).length === 0 && spoilerGroup.constructor === Object)) {
+    if (!(Object.keys(spoilerGroup).length === 0 &&   spoilerGroup.constructor === Object)) {
       STORAGE.addToStorage(spoilerGroup);
+      return true;
     }
+    return false;
   }
   
   saveBtn.addEventListener('click', function(e) {
-    saveNewGroup(spoilerGroup);
+    if (saveNewGroup(spoilerGroup)) {
+      // hide results that have been saved
+      tvResultsEl.style.display = 'none';
+      tvSaveFailureEl.style.display = 'none';
+      // briefly display success message
+      tvSaveSuccessEl.style.display = 'block';
+      setTimeout(function() {
+        tvSaveSuccessEl.style.display = 'none';
+      }, 5000);
+    } else {
+      tvSaveFailureEl.style.display = 'block';
+      setTimeout(function() {
+        tvSaveFailureEl.style.display = 'none';
+      }, 5000);
+    }
+    saveBtn.disabled = true;
   });
+  
+  manageContainer.classList.add('collapsed');
+  tvSearchContainer.classList.add('collapsed');
   
   manageExpand.addEventListener('click', function(e) {
     if (manageOpen) {
@@ -130,20 +158,20 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       displayManage();
     }
+    manageContainer.classList.toggle('collapsed');
+    toggleCaretState('manage-expand-caret-icon');
   });
-  
-  tvSearchContainer.classList.add('collapsed');
   
   tvSearchExpand.addEventListener('click', function(e) {
     tvSearchContainer.classList.toggle('collapsed');
-    /* if (tvSearchOpen) {
-      tvSearchOpen = false;
-      tvSearchContainer.style.display = 'none';
-    } else {
-      tvSearchOpen = true;
-      tvSearchContainer.style.display = 'block';
-    } */
+    toggleCaretState('tv-expand-caret-icon');
   });
+  
+  function toggleCaretState(elementId) {
+    var caretIcon = document.getElementById(elementId);
+    caretIcon.classList.toggle('fa-caret-down');
+    caretIcon.classList.toggle('fa-caret-up');
+  }
   
   addBtn.addEventListener('click', function(e) {
     if (!groupCreationInProgress) {
@@ -161,6 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // hide container
     manageContainer.style.display = 'none';
+    
     // delete all children
     while (manageGroupContainer.hasChildNodes()) {
       manageGroupContainer.removeChild(manageGroupContainer.lastChild);
@@ -170,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function displayManage() {
     manageOpen = true;
     
-    // display container
+    // hide container
     manageContainer.style.display = 'block';
 
     // display groups
@@ -227,9 +256,13 @@ document.addEventListener('DOMContentLoaded', function() {
     newGroupNameEl.id = 'new-group-el';
     newGroupNameEl.appendChild(nameInput);
     
-    var finishBtn = document.createElement('i');
-    finishBtn.className = 'fa fa-check';
+    var finishBtn = document.createElement('button');
     finishBtn.id = 'spoiler-group-finish';
+    finishBtn.type = 'button';
+    finishBtn.className = 'btn btn-success';
+    var finishIcon = document.createElement('i');
+    finishIcon.className = 'fa fa-check';
+    finishBtn.appendChild(finishIcon);
     
     // TODO: don't close if already exists - some visual validation
     finishBtn.addEventListener('click', function(e) {

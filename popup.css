@@ -18,32 +18,30 @@ body {
   float: right;
 }
 
-/* List of things to hide on initialisation */
-#group-results, #tv-search-failure, #tv-results {
+#group-results, #tv-search-failure, #tv-save-success, #tv-save-failure, #tv-results {
   display: none;
 }
 
+#tv-search-failure {
+  color: orangered;
+}
+
+#tv-save-success {
+  color: limegreen;
+}
+
 #tv-search-container {
-  max-height: 500px;
-  overflow: hidden;
-  transform: scale(1);
-  transition: max-height 1s ease-in;
+  display: block;
 }
 
-#tv-search-container.collapsed {
-  max-height: 0px;
-  transform: scale(0);
-  transition: max-height 0.15s;
+#tv-search-container.collapsed, #manage-container.collapsed {
+  display: none;
 }
 
-#result-img {
+#tv-result-name, #tv-result-img {
   display: block;
   margin-left: auto;
   margin-right: auto;
-}
-
-#manage-container {
- display: none; 
 }
 
 #manage-container #add {
@@ -101,7 +99,7 @@ body {
 }
 
 #spoiler-group-finish, .new-spoiler-finish {
-  color: green;
+  color: white;
   margin-left: 10px;
 }
 
