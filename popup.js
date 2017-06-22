@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
+  // TODO: move structure to HTML and hide - can get rid of code and flag for spoilerCreationInProgress
   function createNewSpoilerGroupView() {
     var groupElement = document.createElement('div');
     // TODO: id - should include name
@@ -49,16 +50,16 @@ document.addEventListener('DOMContentLoaded', function() {
     newGroupNameEl.id = 'new-group-el';
     newGroupNameEl.appendChild(nameInput);
     
-    var finishBtn = document.createElement('button');
-    finishBtn.id = 'spoiler-group-finish';
-    finishBtn.type = 'button';
-    finishBtn.className = 'btn btn-success';
+    
     var finishIcon = document.createElement('i');
+    finishIcon.id = 'spoiler-group-finish';
     finishIcon.className = 'fa fa-check';
-    finishBtn.appendChild(finishIcon);
+    
+    var deleteIcon = document.createElement('i');
+    deleteIcon.className = 'fa fa-close delete-group-icon';
     
     // TODO: don't close if already exists - some visual validation
-    finishBtn.addEventListener('click', function(e) {
+    finishIcon.addEventListener('click', function(e) {
       var newGroupName = nameInput.value;
       if (!newGroupName) {
         return;
@@ -71,9 +72,15 @@ document.addEventListener('DOMContentLoaded', function() {
       groupCreationInProgress = false;
     });
     
+    deleteIcon.addEventListener('click', function(e) {
+      newGroupContainer.removeChild(groupElement);
+      groupCreationInProgress = false;
+    });
+    
     var newGroupFinishEl = document.createElement('div');
     newGroupFinishEl.id = 'new-group-finish-el';
-    newGroupFinishEl.appendChild(finishBtn);
+    newGroupFinishEl.appendChild(finishIcon);
+    newGroupFinishEl.appendChild(deleteIcon);
     
     groupElement.appendChild(newGroupNameEl);
     groupElement.appendChild(newGroupFinishEl);
@@ -118,40 +125,46 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.local.get({groups: []}, function (result) {
       result.groups.forEach(function(storedGroup) {
 
-        // Whole group view
-        var groupView = createGroupView(storedGroup);
-        
-        var groupSummaryView = document.createElement('div');
-        groupSummaryView.className = "group-summary";
-
-        // Group text
-        var groupNameView = document.createElement('div');
-        groupNameView.className = 'group-view-text';
-        var groupNameSpan = document.createElement('span');
-        groupNameSpan.className = 'group-view-text-span';
-        groupNameSpan.appendChild(document.createTextNode(storedGroup.name));
-        groupNameView.appendChild(groupNameSpan);
-        
-        // Buttons
-        var buttonsView = document.createElement('div');
-        buttonsView.className = 'group-view-buttons';
-        
-        // Expand info functionality
-        var expandIcon = createExpandIcon(storedGroup, groupView);
-        
-        // Delete functionality
-        var deleteIcon = createDeleteIcon(storedGroup);
-        
-        buttonsView.appendChild(expandIcon);
-        buttonsView.appendChild(deleteIcon);
-
-        // building view for a whole group
-        groupSummaryView.appendChild(groupNameView);
-        groupSummaryView.appendChild(buttonsView);
-        groupView.appendChild(groupSummaryView);
-        manageGroupContainer.appendChild(groupView);
+        createAndAppendSpoilerGroupElementToManage(storedGroup);
       });  
     });
+  }
+  
+  function createAndAppendSpoilerGroupElementToManage(storedGroup) {
+    
+    if (manageGroupContainer) {
+      var groupView = createGroupView(storedGroup);
+
+      var groupSummaryView = document.createElement('div');
+      groupSummaryView.className = "group-summary";
+
+      // Group text
+      var groupNameView = document.createElement('div');
+      groupNameView.className = 'group-view-text';
+      var groupNameSpan = document.createElement('span');
+      groupNameSpan.className = 'group-view-text-span';
+      groupNameSpan.appendChild(document.createTextNode(storedGroup.name));
+      groupNameView.appendChild(groupNameSpan);
+
+      // Buttons
+      var buttonsView = document.createElement('div');
+      buttonsView.className = 'group-view-buttons';
+
+      // Expand info functionality
+      var expandIcon = createExpandIcon(storedGroup, groupView);
+
+      // Delete functionality
+      var deleteIcon = createDeleteIcon(storedGroup);
+
+      buttonsView.appendChild(expandIcon);
+      buttonsView.appendChild(deleteIcon);
+
+      // building view for a whole group
+      groupSummaryView.appendChild(groupNameView);
+      groupSummaryView.appendChild(buttonsView);
+      groupView.appendChild(groupSummaryView);
+      manageGroupContainer.appendChild(groupView);
+    }
   }
   
   function createGroupView(storedGroup) {
@@ -220,15 +233,17 @@ document.addEventListener('DOMContentLoaded', function() {
     expandSection.className = 'group-expanded';
 
     // adding new spoiler
-    var newSpoilerIcon = document.createElement('i');
-    newSpoilerIcon.className = 'fa fa-plus new-spoiler';
-    newSpoilerIcon.addEventListener('click', function(e) {
+    var newSpoilerBtn = document.createElement('button');
+    newSpoilerBtn.type = 'button';
+    newSpoilerBtn.className = 'btn btn-info btn-sm new-spoiler';
+    newSpoilerBtn.textContent = 'Add\u2026';
+    newSpoilerBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       
       createNewSpoiler(_group, expandSection);
     });
 
-    expandSection.appendChild(newSpoilerIcon);
+    expandSection.appendChild(newSpoilerBtn);
     expandSection.appendChild(document.createElement('br'));
     expandSection.appendChild(document.createElement('br'));
 
@@ -364,7 +379,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     removeTvCharactersFromCharacterListElement();
     
-    hideManage();
     tvSaveFailureEl.style.display = 'none';
     
     var tvGroup = document['tv-group-search']['tv-group'].value;
@@ -434,9 +448,9 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   function saveNewGroup(spoilerGroup) {
-    hideManage();
     if (!(Object.keys(spoilerGroup).length === 0 &&   spoilerGroup.constructor === Object)) {
       STORAGE.addToStorage(spoilerGroup);
+      createAndAppendSpoilerGroupElementToManage(spoilerGroup);
       return true;
     }
     return false;

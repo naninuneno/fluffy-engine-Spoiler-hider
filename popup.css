@@ -95,11 +95,15 @@ body {
   margin-left: 10px;
 }
 
-.group-view-buttons .expand-group-icon:hover {
+.new-spoiler {
+  float: right;
+}
+
+.expand-group-icon:hover {
   color: lightgrey;
 }
 
-.group-view-buttons .delete-group-icon:hover {
+.delete-group-icon:hover {
   color: crimson;
 }
 
@@ -119,8 +123,12 @@ body {
 }
 
 #spoiler-group-finish, .new-spoiler-finish {
-  color: white;
+  color: forestgreen;
   margin-left: 10px;
+}
+
+#spoiler-group-finish:hover, .new-spoiler-finish:hover {
+  color: darkgreen;
 }
 
 .group-expanded {
